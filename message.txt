@@ -1,0 +1,12 @@
+{
+    "text": "New link! <LINK>",
+	"blocks": [
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "Here's a link for you!\n<<LINK>>\n<CONTEXT>"
+			}
+		}
+	]
+}
