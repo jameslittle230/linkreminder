@@ -1,6 +1,7 @@
 import os
 import time
 import random
+import logging
 import requests
 import datetime
 from database import Database
@@ -8,7 +9,7 @@ from datetime import date, timedelta
 import xml.etree.ElementTree as ET
 
 MOCK_API_CALLS = False
-DEBUG = False
+DEBUG_METHODS = False
 
 ACCEPTABLE_NOTIF_HOURS = [
     9,
@@ -28,6 +29,9 @@ EXPONENTIAL_STEPS = [
 ]
 
 db = None
+
+l = logging.getLogger()
+logging.basicConfig(level=logging.INFO)
 
 
 def makeAuthenticatedPinboardRequestOrMock(endpoint, filename):
@@ -50,11 +54,20 @@ def getAllFromPinboard():
     return ET.fromstring(xml_output)
 
 
-def normalizeTodaysPosts():
+def normalizePosts():
+    outdated = 0
+    for entry in getPostsBeforeDay(date.today()):
+        entry["punt_until"] = date.today() + timedelta(days=3)
+        db.update(entry["hash"], entry)
+        outdated += 1
+    l.info(f"Updated {outdated} outdated posts.")
+
     todays_posts = getPostsForDay(date.today())
     acceptable_post_count = len(ACCEPTABLE_NOTIF_HOURS)
     if len(todays_posts) <= acceptable_post_count:
         return
+
+    l.info(f"{len(todays_posts)} posts scheduled for today; normalizing to {len(ACCEPTABLE_NOTIF_HOURS)}.")
 
     # Posts with a lower priority get punted more often. Since priority is based
     # on last update delta, posts at the less frequent end of the exponential
@@ -74,6 +87,10 @@ def getPostsForDay(date):
     return list(filter(lambda x: x["punt_until"] == date, db.entries()))
 
 
+def getPostsBeforeDay(date):
+    return list(filter(lambda x: x["punt_until"] < date, db.entries()))
+
+
 def sendSlackMessageForPost(post):
     with open('message.txt') as f:
         template = f.read()
@@ -90,11 +107,13 @@ def sendSlackMessageForPost(post):
 
 def sendCronNotification():
     todays_posts = getPostsForDay(date.today())
+    l.debug(todays_posts)
     if len(todays_posts) == 0:
+        l.info("No posts remaining today, no message sent.")
         return False
 
     post = todays_posts[0]
-    print(post)
+    l.info(post)
     sendSlackMessageForPost(post)
 
     next_exponential_step = list(
@@ -107,42 +126,43 @@ def sendCronNotification():
     db.update(post["hash"], post)
 
 
-def reloadDatabase(rootElement):
-    removed = 0
-    added = 0
+def reloadDatabase():
+    post_list = list(getAllFromPinboard())
     current_entries = db.entries().copy()
+    number_of_posts = len(post_list)
+    added = 0
+    deleted = 0
+    duplicates = 0
 
-    for child in list(rootElement):
-        # If child isn't in database, add it
-        matching_entries = list(
-            filter(lambda x: x["hash"] == child.attrib["hash"], current_entries))
-        if len(matching_entries) == 0:
-            punt_date = date.today() + timedelta(days=4)
-            addEntryWithPuntDate(child, punt_date)
-            added += 1
-        # If child is in database, remove it from our temp list
-        else:
-            current_entries.remove(matching_entries[0])
-    # For all database entries without a matching child, delete from database
+    for child in post_list:
+        hashes_in_db = list(map(lambda x: x["hash"], current_entries))
+        if child.attrib["hash"] in hashes_in_db:
+            duplicates += 1
+            continue
+        punt_until_date = date.today() + timedelta(4)
+        addEntryWithPuntDate(child, punt_until_date)
+        added += 1
+
+    hashes_from_server = list(map(lambda x: x.attrib["hash"], post_list))
     for entry in current_entries:
-        db.remove(entry["hash"])
-        removed += 1
+        if entry["hash"] in hashes_from_server:
+            continue
+        db.remove(entry)
+        deleted += 1
 
-    print(f"Added {added} items and removed {removed} items.")
+    l.info(
+        f"Inserted {added} entries and deleted {deleted} entries. {duplicates} duplicates found.")
 
 
 def cronHandler():
-    pinboard_input = getAllFromPinboard()
     hour = datetime.datetime.now().hour
-    reloadDatabase(pinboard_input)
+    reloadDatabase()
 
-    if hour < ACCEPTABLE_NOTIF_HOURS[0]:
-        normalizeTodaysPosts()
-        return
+    if hour < ACCEPTABLE_NOTIF_HOURS[0] or DEBUG_METHODS == True:
+        normalizePosts()
 
-    if hour in ACCEPTABLE_NOTIF_HOURS or DEBUG == True:
+    if hour in ACCEPTABLE_NOTIF_HOURS or DEBUG_METHODS == True:
         sendCronNotification()
-        return
 
 
 def addEntryWithPuntDate(xmlElement, date):
@@ -166,14 +186,14 @@ def initializeDatabase():
     duplicates = 0
 
     if len(db.entries()) > 0:
-        print(
+        l.warning(
             f"Database already has {len(db.entries())} entries, cannot reinitialize.")
         return
 
     for (idx, child) in enumerate(post_list):
         hashes = list(map(lambda x: x["hash"], db.entries()))
         if child.attrib["hash"] in hashes:
-            print(f"Duplicate: {child.attrib['href']}")
+            l.debug(f"Duplicate: {child.attrib['href']}")
             duplicates += 1
             continue
         delta = timedelta(days=idx//len(ACCEPTABLE_NOTIF_HOURS))
@@ -181,7 +201,7 @@ def initializeDatabase():
         print(punt_until_date)
         addEntryWithPuntDate(child, punt_until_date)
         added += 1
-    print(f"Inserted {added} entries. {duplicates} duplicates found.")
+    l.info(f"Inserted {added} entries. {duplicates} duplicates found.")
 
 
 if __name__ == "__main__":
