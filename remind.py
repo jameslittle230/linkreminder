@@ -10,8 +10,8 @@ from database import Database
 from datetime import date, timedelta
 import xml.etree.ElementTree as ET
 
-MOCK_API_CALLS = True
-DEBUG_METHODS = True
+MOCK_API_CALLS = False
+DEBUG_METHODS = False
 
 ACCEPTABLE_NOTIF_HOURS = [
     9,
