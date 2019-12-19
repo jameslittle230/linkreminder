@@ -1,15 +1,17 @@
 import os
+# import ssl
 import time
 import random
 import logging
 import requests
 import datetime
+import argparse
 from database import Database
 from datetime import date, timedelta
 import xml.etree.ElementTree as ET
 
-MOCK_API_CALLS = False
-DEBUG_METHODS = False
+MOCK_API_CALLS = True
+DEBUG_METHODS = True
 
 ACCEPTABLE_NOTIF_HOURS = [
     9,
@@ -92,7 +94,8 @@ def getPostsBeforeDay(date):
 
 
 def sendSlackMessageForPost(post):
-    with open('message.txt') as f:
+    filedir = os.path.dirname(os.path.realpath(__file__))
+    with open(os.path.join(filedir, 'message.txt')) as f:
         template = f.read()
         context = "You've never seen this link before."
         if "last_seen" in post:
