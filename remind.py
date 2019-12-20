@@ -6,6 +6,7 @@ import logging
 import requests
 import datetime
 import argparse
+import databaseToHtml
 from database import Database
 from datetime import date, timedelta
 import xml.etree.ElementTree as ET
@@ -169,6 +170,8 @@ def cronHandler():
 
     if hour in ACCEPTABLE_NOTIF_HOURS or DEBUG_METHODS == True:
         sendCronNotification()
+
+    databaseToHtml.generateHtml(db)
 
 
 def addEntryWithPuntDate(xmlElement, date):
