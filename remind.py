@@ -10,8 +10,8 @@ from database import Database
 from datetime import date, timedelta
 import xml.etree.ElementTree as ET
 
-MOCK_API_CALLS = False
-DEBUG_METHODS = False
+MOCK_API_CALLS = True
+DEBUG_METHODS = True
 
 ACCEPTABLE_NOTIF_HOURS = [
     9,
@@ -146,11 +146,14 @@ def reloadDatabase():
         addEntryWithPuntDate(child, punt_until_date)
         added += 1
 
+    current_entries = db.entries().copy()
+
     hashes_from_server = list(map(lambda x: x.attrib["hash"], post_list))
     for entry in current_entries:
         if entry["hash"] in hashes_from_server:
             continue
-        db.remove(entry)
+        # otherwise, entry is in database, but isn't on the server
+        db.remove(entry["hash"])
         deleted += 1
 
     l.info(

@@ -33,17 +33,19 @@ class Database:
     def insert(self, object):
         self.data.append(object)
 
-    def update(self, hash, replacement_object=None):
-        filter_results = list(filter(lambda x: x["hash"] == "hash", self.data))
+    def update(self, myHash, replacement_object=None):
+        filter_results = list(filter(lambda x: x["hash"] == myHash, self.data))
         if len(filter_results) > 1:
             raise "Hashes in database are not unique"
         if len(filter_results) == 1:
             self.data.remove(filter_results[0])
             if replacement_object != None:
                 self.data.append(replacement_object)
+        if len(filter_results) == 0:
+            print("Trying to delete an item that isn't in the database.")
 
-    def remove(self, hash):
-        self.update(hash, None)
+    def remove(self, myHash):
+        self.update(myHash, None)
 
     def serialize(self, object):
         return ''.join(codecs.encode(pickle.dumps(object), "base64").decode().split('\n'))
