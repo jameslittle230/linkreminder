@@ -4,15 +4,34 @@ Here, I've made a script that you run every hour via a cron job. This script wil
 
 ## Setup
 
+This project requires Python 3.
+
+Install the [AWS CLI](https://aws.amazon.com/cli/). Make sure you have an AWS user that has S3 access, then run:
+
+```bash
+$ aws configure
+```
+
 Add the two environment variables to your computer:
 
 - `SLACK_URL`
 - `PINBOARD_TOKEN`
 
-Then, add a cron job that runs `remind.py`:
+Then, add a cron job that somehow runs `remind.py`:
 
-```
-5 * * * * python3 remind.py
+```crontab
+0 * * * * python3 /home/james/linkreminder/.execute.py
 ```
 
-(This will actually run at five minutes past every hour.)
+I created an `.execute.sh` file in the root of this project (don't worry, it's gitignore'd) that sets the right environment variables, runs the [pyenv](https://github.com/pyenv/pyenv) setup stuff, and then runs `remind.py`.
+
+```bash
+#!/bin/bash
+
+export PATH=~/.pyenv/shims:~/.pyenv/bin:"$PATH"
+TZ='America/Los_Angeles'; export TZ
+export SLACK_URL=https://hooks.slack.com/services/<nope>
+export PINBOARD_TOKEN=<nope>
+
+python /home/james/linkreminder/remind.py > /home/james/linkreminder/.output.log 2>&1
+```
