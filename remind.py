@@ -6,6 +6,7 @@ import logging
 import requests
 import datetime
 import argparse
+import s3uploader
 import databaseToHtml
 from database import Database
 from datetime import date, timedelta
@@ -171,7 +172,9 @@ def cronHandler():
     if hour in ACCEPTABLE_NOTIF_HOURS or DEBUG_METHODS == True:
         sendCronNotification()
 
-    databaseToHtml.generateHtml(db)
+    htmlFile = databaseToHtml.generateHtml(db)
+    s3uploader.uploadFile(
+        htmlFile, 'misc/linkreminder.html', 'files.jameslittle.me')
 
 
 def addEntryWithPuntDate(xmlElement, date):

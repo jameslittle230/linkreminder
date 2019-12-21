@@ -39,5 +39,7 @@ def generateHtml(database):
         template = f.read()
         template = template.replace("(TABLE)", headerRow + rows)
 
-        with open(os.path.join(filedir, 'output.html'), 'w') as output_f:
+        output_path = os.path.join(filedir, 'output.html')
+        with open(output_path, 'w') as output_f:
             output_f.write(template)
+            return output_path
