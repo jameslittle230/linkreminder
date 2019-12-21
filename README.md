@@ -22,10 +22,10 @@ Add the two environment variables to your computer:
 Then, add a cron job that somehow runs `remind.py`:
 
 ```crontab
-0 * * * * python3 /home/james/linkreminder/.execute.py
+0 * * * * python3 /home/james/linkreminder/remind.py
 ```
 
-I created an `.execute.sh` file in the root of this project (don't worry, it's gitignore'd) that sets the right environment variables, runs the [pyenv](https://github.com/pyenv/pyenv) setup stuff, and then runs `remind.py`.
+I actually created an `.execute.sh` file in the root of this project on my server (don't worry, it's gitignore'd) that sets the right environment variables, runs the [pyenv](https://github.com/pyenv/pyenv) setup stuff, and then runs `remind.py`. Here's what that script looks like for me—I couldn't actually figure out how to get it to work properly without doing this bootstrapping stuff.
 
 ```bash
 #!/bin/bash
