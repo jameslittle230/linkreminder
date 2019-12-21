@@ -14,6 +14,7 @@ import xml.etree.ElementTree as ET
 
 MOCK_API_CALLS = True
 DEBUG_METHODS = True
+UPLOAD_TO_S3 = False
 
 ACCEPTABLE_NOTIF_HOURS = [
     9,
@@ -173,8 +174,10 @@ def cronHandler():
         sendCronNotification()
 
     htmlFile = databaseToHtml.generateHtml(db)
-    s3uploader.uploadFile(
-        htmlFile, 'misc/linkreminder.html', 'files.jameslittle.me')
+
+    if UPLOAD_TO_S3:
+        s3uploader.uploadFile(
+            htmlFile, 'misc/linkreminder.html', 'files.jameslittle.me')
 
 
 def addEntryWithPuntDate(xmlElement, date):
