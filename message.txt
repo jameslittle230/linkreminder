@@ -1,5 +1,7 @@
 {
     "text": "New link! <LINK>",
+	"unfurl_links": true,
+	"unfurl_media": true,
 	"blocks": [
 		{
 			"type": "section",
@@ -7,6 +9,15 @@
 				"type": "mrkdwn",
 				"text": "Here's a link for you!\n<<LINK>>\n<CONTEXT>"
 			}
+		},
+		{
+			"type": "context",
+			"elements": [
+				{
+					"type": "mrkdwn",
+					"text": "<<PINBOARD_URL>|See this on Pinboard.> Have a nice day."
+				}
+			]
 		}
 	]
 }

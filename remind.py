@@ -7,6 +7,7 @@ import requests
 import datetime
 import argparse
 import s3uploader
+import urllib.parse
 import databaseToHtml
 from database import Database
 from datetime import date, timedelta
@@ -104,8 +105,14 @@ def sendSlackMessageForPost(post):
         if "last_seen" in post:
             days_since = (date.today() - post["last_seen"]).days
             context = f"You last saw this link {days_since} days ago."
+
+        pinboardUsername = os.environ["PINBOARD_TOKEN"].split(":")[0]
+        searchQuery = urllib.parse.quote(post["href"], safe="")
+        pinboardLink = f"https://pinboard.in/search/u:{pinboardUsername}?query={searchQuery}"
         template = template.replace(
-            '<LINK>', post["href"]).replace('<CONTEXT>', context)
+            '<LINK>', post["href"]).replace(
+            '<CONTEXT>', context).replace(
+            '<PINBOARD_URL>', pinboardLink)
         requests.post(os.environ["SLACK_URL"], data=template)
         post["last_seen"] = date.today()
         db.update(post["hash"], post)
