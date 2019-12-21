@@ -2,6 +2,8 @@ I listened to a talk by [Andy Matuschak](https://andymatuschak.org/) recently. H
 
 Here, I've made a script that you run every hour via a cron job. This script will find Pinboard articles you've saved and remind you of them, with exponential backoff, letting you explore the links you've saved and maybe have reactions to them over the course of years.
 
+This project will also upload an HTML file with the upcoming schedule of links to AWS S3, if you let it. [Here's mine.](https://jil.im/linkreminder)
+
 ## Setup
 
 This project requires Python 3.
