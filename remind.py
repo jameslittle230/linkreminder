@@ -75,7 +75,7 @@ def normalizePosts():
     # Posts with a lower priority get punted more often. Since priority is based
     # on last update delta, posts at the less frequent end of the exponential
     # backoff get punted less.
-    todays_posts.sort(key=lambda x: x["punt_priority"], reversed=True)
+    todays_posts.sort(key=lambda x: x["punt_priority"], reverse=True)
 
     overflow = todays_posts[acceptable_post_count:]
     for post in overflow:
